@@ -119,6 +119,31 @@
   button.send:disabled { opacity: .5; cursor: default; }
   .note { max-width: 760px; margin: 6px auto 0; color: var(--muted); font-size: 12px; text-align: center; }
 
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 0; }
+  .actions button, .links a {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 14px; cursor: pointer; text-decoration: none;
+  }
+  .actions button:hover, .links a:hover { border-color: var(--accent); }
+  .links { background: var(--accent-soft); border-radius: 14px; padding: 12px 14px; margin: 12px 0 0; }
+  .links p { margin: 0 0 8px; font-size: 14px; font-weight: 600; }
+  .links .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .links small { display: block; margin-top: 8px; color: var(--muted); font-size: 12px; }
+  @media print {
+    header, footer, .actions, .status, .links small { display: none !important; }
+    html, body { height: auto; background: #fff; color: #000; display: block; }
+    main { overflow: visible; }
+    .thread { max-width: none; padding: 0; }
+    .msg.user .bubble { background: #f2f2f2; max-width: none; width: auto; margin: 0; }
+    .msg.agent .bubble { border: 0; padding: 0; background: #fff; }
+    .bubble th { background: #f2f2f2; }
+    .links .row { display: block; }
+    .links { background: none; border: 1px solid #ccc; }
+    .links a { display: block; border: 0; padding: 2px 0; color: #0f6b5c; }
+    .links a::after { content: " (" attr(href) ")"; font-size: 10px; color: #555; word-break: break-all; }
+    a { color: #0f6b5c; }
+  }
   @media (max-width: 560px) {
     .grid, .grid.three { grid-template-columns: 1fr 1fr; }
     .grid .wide-sm { grid-column: 1 / -1; }
@@ -296,6 +321,7 @@ const thread = $('thread'), scroller = $('scroller');
 const tripForm = $('tripForm'), chatForm = $('chatForm');
 const input = $('input'), sendBtn = $('send'), codeEl = $('code');
 let sessionId = null;
+let tripLinks = null;   // booking links built from the form, shown under the first plan
 let busy = false;
 
 fetch('/api/config').then(r => r.json()).then(c => {
@@ -375,7 +401,72 @@ function buildRequest() {
   ];
   if (interests.length) lines.push(`• Interests: ${interests.join(', ')}`);
   if (notes) lines.push(`• Notes: ${notes}`);
+  tripLinks = buildLinks({ from, to, flexible, start: $('start').value, end: $('end').value, adults, kids });
   return { text: lines.join('\n') };
+}
+
+function buildLinks({ from, to, flexible, start, end, adults, kids }) {
+  const enc = encodeURIComponent;
+  const dated = !flexible && start && end;
+  const air = new URL(`https://www.airbnb.com/s/${enc(to)}/homes`);
+  air.searchParams.set('adults', adults);
+  if (kids) air.searchParams.set('children', kids);
+  if (dated) { air.searchParams.set('checkin', start); air.searchParams.set('checkout', end); }
+  const bk = new URL('https://www.booking.com/searchresults.html');
+  bk.searchParams.set('ss', to);
+  bk.searchParams.set('group_adults', adults);
+  bk.searchParams.set('group_children', kids);
+  bk.searchParams.set('no_rooms', 1);
+  if (dated) { bk.searchParams.set('checkin', start); bk.searchParams.set('checkout', end); }
+  const flightQ = `Flights from ${from} to ${to}` + (dated ? ` on ${start} through ${end}` : '');
+  const gf = 'https://www.google.com/travel/flights?q=' + enc(flightQ);
+  return [
+    { label: 'Airbnb stays', url: air.toString() },
+    { label: 'Hotels on Booking.com', url: bk.toString() },
+    { label: 'Google Flights', url: gf },
+  ];
+}
+
+function addLinks(root) {
+  if (!tripLinks) return;
+  const box = document.createElement('div');
+  box.className = 'links';
+  box.innerHTML = '<p>Browse live availability for your dates</p><div class="row"></div><small>Opens each site with your destination, dates and guests filled in. Prices there are live.</small>';
+  tripLinks.forEach(l => {
+    const a = document.createElement('a');
+    a.href = l.url; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = l.label + ' ↗';
+    box.querySelector('.row').appendChild(a);
+  });
+  root.appendChild(box);
+  tripLinks = null; // only under the first plan
+}
+
+function addActions(root, md) {
+  const bar = document.createElement('div');
+  bar.className = 'actions';
+  const pdf = document.createElement('button');
+  pdf.type = 'button'; pdf.textContent = 'Save as PDF';
+  pdf.title = 'Opens the print dialog. Choose "Save as PDF" as the printer.';
+  pdf.addEventListener('click', () => window.print());
+  const doc = document.createElement('button');
+  doc.type = 'button'; doc.textContent = 'Download Word';
+  doc.addEventListener('click', () => downloadWord(md));
+  bar.append(pdf, doc);
+  root.appendChild(bar);
+}
+
+function downloadWord(md) {
+  const body = render(md);
+  const html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>Trip plan</title>
+<style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt;line-height:1.4}h1,h2,h3{font-family:Georgia,serif;color:#0f3f37}
+table{border-collapse:collapse;width:100%}th,td{border:1px solid #bbb;padding:4pt 6pt;vertical-align:top}th{background:#eef3f1}a{color:#0f6b5c}</style></head>
+<body>${body}<p style="color:#777;font-size:9pt">Prices and availability came from live web searches and may have changed. Created at tp.oberoiventuresinc.com.</p></body></html>`;
+  const blob = new Blob(['﻿', html], { type: 'application/msword' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'trip-plan.doc';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
 }
 
 tripForm.addEventListener('submit', e => {
@@ -470,7 +561,7 @@ async function send(text) {
           view.statusText.textContent = 'Working…';
           scrollDown();
         } else if (ev === 'error') { showError(view, data.message); finished = true; }
-        else if (ev === 'done') { view.status.remove(); finished = true; }
+        else if (ev === 'done') { view.status.remove(); finished = true; if (md) { addLinks(view.root); addActions(view.root, md); scrollDown(); } }
       }
     }
     if (!finished) showError(view, 'The connection closed early. Please try again.');
