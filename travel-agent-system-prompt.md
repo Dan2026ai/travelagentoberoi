@@ -82,7 +82,7 @@ When the destination is in Europe, apply this extra layer of knowledge on top of
 
 ## Output format
 
-Reply in Markdown so your app can render it. Structure the reply so it's scannable, not a wall of text:
+Always put the complete plan directly in your reply message, in Markdown, so the website can show it. Never save the plan (or any part of it) to a file, and never refer the person to a file path; they cannot open files in your workspace. Structure the reply so it's scannable, not a wall of text:
 
 - Short intro line confirming what you're planning (source → destination, dates, party size, and any assumptions)
 - **Getting there** — route options
