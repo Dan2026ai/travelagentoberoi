@@ -12,7 +12,7 @@ import os
 import time
 from collections import defaultdict, deque
 
-from anthropic import AsyncAnthropic
+from anthropic import APIStatusError, AsyncAnthropic
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -163,9 +163,13 @@ async def _run_turn(message: str, session_id: str | None):
 
         yield _sse("done", {"session_id": session_id})
 
+    except APIStatusError as exc:
+        print(f"[chat error] {exc.status_code}: {exc}", flush=True)
+        reason = getattr(exc, "message", "") or str(exc)
+        yield _sse("error", {"message": f"The agent service returned an error ({exc.status_code}): {reason[:300]}"})
     except Exception as exc:  # surface a friendly message; details go to server logs
         print(f"[chat error] {type(exc).__name__}: {exc}", flush=True)
-        yield _sse("error", {"message": "Something went wrong talking to the agent. Please try again."})
+        yield _sse("error", {"message": f"Something went wrong talking to the agent ({type(exc).__name__}). Please try again."})
 
 
 def _describe_tool(name: str, tool_input: dict) -> str:
