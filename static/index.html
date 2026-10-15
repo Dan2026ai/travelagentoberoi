@@ -12,13 +12,13 @@
   :root {
     --bg: #f6f2ea; --surface: #fffdf8; --ink: #1f2a2e; --muted: #6b7478;
     --line: #e4ddd0; --accent: #0f6b5c; --accent-ink: #ffffff; --user: #e8f1ee;
-    --warn-bg: #fdecea; --warn-ink: #8a2a1f;
+    --accent-soft: #e3efeb; --warn-bg: #fdecea; --warn-ink: #8a2a1f;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg: #12181a; --surface: #1a2225; --ink: #e8ecea; --muted: #9aa5a8;
       --line: #2a3437; --accent: #3fb59d; --accent-ink: #0d1517; --user: #1f3330;
-      --warn-bg: #3a1f1c; --warn-ink: #f2b8ae;
+      --accent-soft: #1d3330; --warn-bg: #3a1f1c; --warn-ink: #f2b8ae;
     }
   }
   * { box-sizing: border-box; }
@@ -39,8 +39,52 @@
     border: 1px solid var(--line); background: transparent; color: var(--ink);
     border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 14px; cursor: pointer; white-space: nowrap; flex: none;
   }
+  #newTrip:hover { border-color: var(--accent); }
   main { flex: 1; overflow-y: auto; }
   .thread { max-width: 760px; margin: 0 auto; padding: 20px 16px 8px; }
+
+  /* ---------- trip form ---------- */
+  .intro { text-align: center; margin: 8px 0 20px; }
+  .intro h2 { font: 600 28px/1.2 Fraunces, Georgia, serif; margin: 0 0 6px; }
+  .intro p { color: var(--muted); margin: 0; }
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+    padding: 20px; margin-bottom: 24px;
+  }
+  .section { margin-bottom: 18px; }
+  .section:last-of-type { margin-bottom: 0; }
+  .section-title { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid.three { grid-template-columns: 1fr 1fr 1.6fr; }
+  .field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .field label { font-size: 14px; font-weight: 500; }
+  .field label .req { color: var(--accent); }
+  .field input, .field select, .field textarea, #code {
+    width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+    font: inherit; font-size: 15px; background: var(--bg); color: var(--ink); min-width: 0;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus, #code:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  .field textarea { resize: vertical; min-height: 92px; }
+  .hint { font-size: 12px; color: var(--muted); }
+  .check { display: flex; align-items: center; gap: 8px; font-size: 14px; margin-top: 10px; cursor: pointer; width: fit-content; }
+  .check input { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; }
+  .hidden { display: none !important; }
+  .seg { display: flex; flex-wrap: wrap; gap: 8px; }
+  .seg button, .tag {
+    border: 1px solid var(--line); background: var(--bg); color: var(--ink);
+    border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 14px; cursor: pointer;
+  }
+  .seg button[aria-pressed="true"], .tag[aria-pressed="true"] {
+    background: var(--accent-soft); border-color: var(--accent); color: var(--ink); font-weight: 500;
+  }
+  .row-label { font-size: 14px; font-weight: 500; margin: 0 0 7px; }
+  .pref-row { margin-bottom: 14px; }
+  .pref-row:last-child { margin-bottom: 0; }
+  .form-error { color: var(--warn-ink); background: var(--warn-bg); border-radius: 10px; padding: 9px 12px; font-size: 14px; margin-top: 14px; }
+  .submit-row { display: flex; justify-content: flex-end; margin-top: 18px; }
+  .submit-row .send { padding: 12px 26px; font-size: 16px; }
+
+  /* ---------- conversation ---------- */
   .msg { margin: 0 0 18px; }
   .msg.user .bubble {
     background: var(--user); border-radius: 16px 16px 4px 16px;
@@ -60,30 +104,28 @@
   .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s infinite; flex: none; }
   @keyframes pulse { 50% { opacity: .25; } }
   .error { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
-  .welcome { text-align: center; padding: 8vh 8px 0; }
-  .welcome h2 { font: 600 28px/1.2 Fraunces, Georgia, serif; margin: 0 0 8px; }
-  .welcome p { color: var(--muted); margin: 0 0 22px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-  .chip {
-    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
-    border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 14px; cursor: pointer; text-align: left;
-  }
-  .chip:hover, #newTrip:hover { border-color: var(--accent); }
+
   footer { border-top: 1px solid var(--line); background: var(--surface); padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
-  form { max-width: 760px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; }
-  textarea {
+  #chatForm { max-width: 760px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; }
+  #input {
     flex: 1; resize: none; border: 1px solid var(--line); border-radius: 14px;
     padding: 11px 14px; font: inherit; background: var(--bg); color: var(--ink); max-height: 160px;
   }
-  textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  #input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
   button.send {
     background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 14px;
     padding: 11px 18px; font: inherit; font-weight: 600; cursor: pointer;
   }
   button.send:disabled { opacity: .5; cursor: default; }
   .note { max-width: 760px; margin: 6px auto 0; color: var(--muted); font-size: 12px; text-align: center; }
-  #codeInput { display: none; max-width: 760px; margin: 0 auto 8px; }
-  #codeInput input { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font: inherit; background: var(--bg); color: var(--ink); }
+
+  @media (max-width: 560px) {
+    .grid, .grid.three { grid-template-columns: 1fr 1fr; }
+    .grid .wide-sm { grid-column: 1 / -1; }
+    .card { padding: 16px; }
+    .intro h2 { font-size: 24px; }
+    .submit-row .send { width: 100%; }
+  }
 </style>
 </head>
 <body>
@@ -97,53 +139,267 @@
 
 <main id="scroller">
   <div class="thread" id="thread">
-    <div class="welcome" id="welcome">
-      <h2>Where are you headed?</h2>
-      <p>Tell me where from, where to, your dates and budget.</p>
-      <div class="chips">
-        <button class="chip" type="button">Hyderabad to Goa, Aug 28–Sep 2, ₹40k for 2</button>
-        <button class="chip" type="button">Delhi to Paris & Amsterdam, 8 days in May, €2,500 per person</button>
-        <button class="chip" type="button">Bengaluru to Coorg this weekend, relaxed pace, nature</button>
+
+    <form id="tripForm" novalidate>
+      <div class="intro">
+        <h2>Plan your trip</h2>
+        <p>Fill in what you know. Only the first few fields are required.</p>
       </div>
-    </div>
+
+      <div class="card">
+        <div class="section">
+          <p class="section-title">Where</p>
+          <div class="grid">
+            <div class="field">
+              <label for="from">From <span class="req">*</span></label>
+              <input id="from" placeholder="e.g. Columbus, OH" autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="to">To <span class="req">*</span></label>
+              <input id="to" placeholder="e.g. Paris" autocomplete="off">
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <p class="section-title">When</p>
+          <div class="grid" id="exactDates">
+            <div class="field">
+              <label for="start">Depart <span class="req">*</span></label>
+              <input id="start" type="date">
+            </div>
+            <div class="field">
+              <label for="end">Return <span class="req">*</span></label>
+              <input id="end" type="date">
+            </div>
+          </div>
+          <div class="grid hidden" id="flexDates">
+            <div class="field">
+              <label for="days">Trip length (days) <span class="req">*</span></label>
+              <input id="days" type="number" min="1" max="90" placeholder="e.g. 10">
+            </div>
+            <div class="field">
+              <label for="when">Roughly when</label>
+              <input id="when" placeholder="e.g. mid-May 2027">
+            </div>
+          </div>
+          <label class="check"><input type="checkbox" id="flexible"> My dates are flexible</label>
+        </div>
+
+        <div class="section">
+          <p class="section-title">Who &amp; budget</p>
+          <div class="grid three">
+            <div class="field">
+              <label for="adults">Adults</label>
+              <input id="adults" type="number" min="1" max="20" value="2">
+            </div>
+            <div class="field">
+              <label for="children">Children</label>
+              <input id="children" type="number" min="0" max="20" value="0">
+            </div>
+            <div class="field wide-sm">
+              <label for="budget">Budget</label>
+              <div style="display:flex; gap:6px;">
+                <select id="currency" style="width:auto; flex:none;" aria-label="Currency">
+                  <option>USD</option><option>INR</option><option>EUR</option>
+                  <option>GBP</option><option>CAD</option><option>AUD</option><option>AED</option>
+                </select>
+                <input id="budget" type="number" min="0" step="100" placeholder="Optional">
+              </div>
+            </div>
+          </div>
+          <div class="seg" id="budgetBasis" style="margin-top:10px;" role="group" aria-label="Budget is">
+            <button type="button" data-value="total" aria-pressed="true">Total for everyone</button>
+            <button type="button" data-value="per person" aria-pressed="false">Per person</button>
+          </div>
+        </div>
+
+        <div class="section">
+          <p class="section-title">Preferences</p>
+          <div class="pref-row">
+            <p class="row-label">Travel style</p>
+            <div class="seg" data-single="style" role="group" aria-label="Travel style">
+              <button type="button" data-value="Budget" aria-pressed="false">Budget</button>
+              <button type="button" data-value="Mid-range" aria-pressed="true">Mid-range</button>
+              <button type="button" data-value="Luxury" aria-pressed="false">Luxury</button>
+            </div>
+          </div>
+          <div class="pref-row">
+            <p class="row-label">Pace</p>
+            <div class="seg" data-single="pace" role="group" aria-label="Pace">
+              <button type="button" data-value="Relaxed" aria-pressed="false">Relaxed</button>
+              <button type="button" data-value="Balanced" aria-pressed="true">Balanced</button>
+              <button type="button" data-value="Packed" aria-pressed="false">Packed</button>
+            </div>
+          </div>
+          <div class="pref-row">
+            <p class="row-label">Where to stay</p>
+            <div class="seg" data-single="stay" role="group" aria-label="Where to stay">
+              <button type="button" data-value="Hotel" aria-pressed="false">Hotel</button>
+              <button type="button" data-value="Airbnb / apartment" aria-pressed="false">Airbnb / apartment</button>
+              <button type="button" data-value="Show both" aria-pressed="true">Show both</button>
+            </div>
+          </div>
+          <div class="pref-row">
+            <p class="row-label">Interests <span class="hint">(pick any)</span></p>
+            <div class="seg" id="interests" role="group" aria-label="Interests">
+              <button type="button" class="tag" aria-pressed="false">History</button>
+              <button type="button" class="tag" aria-pressed="false">Museums &amp; art</button>
+              <button type="button" class="tag" aria-pressed="false">Food &amp; drink</button>
+              <button type="button" class="tag" aria-pressed="false">Nature</button>
+              <button type="button" class="tag" aria-pressed="false">Beaches</button>
+              <button type="button" class="tag" aria-pressed="false">Shopping</button>
+              <button type="button" class="tag" aria-pressed="false">Nightlife</button>
+              <button type="button" class="tag" aria-pressed="false">Adventure</button>
+              <button type="button" class="tag" aria-pressed="false">Family-friendly</button>
+              <button type="button" class="tag" aria-pressed="false">Romantic</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <p class="section-title">Anything else?</p>
+          <div class="field">
+            <textarea id="notes" maxlength="800" placeholder="e.g. vegetarian, travelling with grandparents, want a day trip to Versailles, prefer trains over flights, celebrating an anniversary…"></textarea>
+          </div>
+        </div>
+
+        <div class="section hidden" id="codeSection">
+          <p class="section-title">Access</p>
+          <div class="field">
+            <label for="code">Access code</label>
+            <input id="code" type="password" autocomplete="off">
+          </div>
+        </div>
+
+        <div class="form-error hidden" id="formError"></div>
+        <div class="submit-row">
+          <button class="send" id="planBtn" type="submit">Plan my trip</button>
+        </div>
+      </div>
+    </form>
+
   </div>
 </main>
 
-<footer>
-  <div id="codeInput"><input id="code" type="password" placeholder="Access code" autocomplete="off"></div>
-  <form id="form">
-    <textarea id="input" rows="1" placeholder="From, to, dates, budget…" maxlength="2000"></textarea>
-    <button class="send" id="send" type="submit">Plan</button>
+<footer id="chatFooter" class="hidden">
+  <form id="chatForm">
+    <textarea id="input" rows="1" placeholder="Ask a follow-up…" maxlength="2000"></textarea>
+    <button class="send" id="send" type="submit">Send</button>
   </form>
   <p class="note">Prices and availability come from live web searches and can change before you book.</p>
 </footer>
 
 <script>
-const thread = document.getElementById('thread');
-const scroller = document.getElementById('scroller');
-const form = document.getElementById('form');
-const input = document.getElementById('input');
-const sendBtn = document.getElementById('send');
-const codeEl = document.getElementById('code');
+const $ = id => document.getElementById(id);
+const thread = $('thread'), scroller = $('scroller');
+const tripForm = $('tripForm'), chatForm = $('chatForm');
+const input = $('input'), sendBtn = $('send'), codeEl = $('code');
 let sessionId = null;
 let busy = false;
 
 fetch('/api/config').then(r => r.json()).then(c => {
-  if (c.access_code_required) document.getElementById('codeInput').style.display = 'block';
+  if (c.access_code_required) $('codeSection').classList.remove('hidden');
 }).catch(() => {});
 
+/* ---------- form controls ---------- */
+const today = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+$('start').min = today; $('end').min = today;
+$('start').addEventListener('change', () => {
+  $('end').min = $('start').value || today;
+  if ($('end').value && $('end').value < $('start').value) $('end').value = '';
+});
+$('flexible').addEventListener('change', e => {
+  $('exactDates').classList.toggle('hidden', e.target.checked);
+  $('flexDates').classList.toggle('hidden', !e.target.checked);
+});
+
+// single-choice button groups
+document.querySelectorAll('.seg[data-single], #budgetBasis').forEach(group => {
+  group.addEventListener('click', e => {
+    const btn = e.target.closest('button'); if (!btn) return;
+    group.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+  });
+});
+// multi-choice interests
+$('interests').addEventListener('click', e => {
+  const btn = e.target.closest('button'); if (!btn) return;
+  btn.setAttribute('aria-pressed', String(btn.getAttribute('aria-pressed') !== 'true'));
+});
+
+const picked = sel => document.querySelector(`${sel} button[aria-pressed="true"]`)?.dataset.value;
+const fmtDate = v => new Date(v + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+function buildRequest() {
+  const from = $('from').value.trim(), to = $('to').value.trim();
+  const flexible = $('flexible').checked;
+  const missing = [];
+  if (!from) missing.push('From');
+  if (!to) missing.push('To');
+  let dates = '';
+  if (flexible) {
+    const days = parseInt($('days').value, 10);
+    if (!days || days < 1) missing.push('Trip length');
+    else dates = `${days} days, flexible` + ($('when').value.trim() ? ` — roughly ${$('when').value.trim()}` : '');
+  } else {
+    const s = $('start').value, e = $('end').value;
+    if (!s) missing.push('Depart date');
+    if (!e) missing.push('Return date');
+    if (s && e) {
+      const nights = Math.round((new Date(e) - new Date(s)) / 86400000);
+      dates = `${fmtDate(s)} to ${fmtDate(e)} (${nights} night${nights === 1 ? '' : 's'})`;
+    }
+  }
+  if (missing.length) return { error: 'Please fill in: ' + missing.join(', ') + '.' };
+
+  const adults = Math.max(1, parseInt($('adults').value, 10) || 1);
+  const kids = Math.max(0, parseInt($('children').value, 10) || 0);
+  const people = `${adults} adult${adults === 1 ? '' : 's'}` + (kids ? `, ${kids} child${kids === 1 ? '' : 'ren'}` : '');
+  const budgetVal = $('budget').value.trim();
+  const budget = budgetVal
+    ? `${Number(budgetVal).toLocaleString('en-US')} ${$('currency').value} ${picked('#budgetBasis')}`
+    : 'Not set — suggest a sensible range';
+  const interests = [...document.querySelectorAll('#interests button[aria-pressed="true"]')].map(b => b.textContent);
+  const notes = $('notes').value.trim();
+
+  const lines = [
+    `Plan my trip:`,
+    `• From: ${from}`,
+    `• To: ${to}`,
+    `• Dates: ${dates}`,
+    `• Travellers: ${people}`,
+    `• Budget: ${budget}`,
+    `• Style: ${picked('[data-single="style"]')}`,
+    `• Pace: ${picked('[data-single="pace"]')}`,
+    `• Stay: ${picked('[data-single="stay"]')}`,
+  ];
+  if (interests.length) lines.push(`• Interests: ${interests.join(', ')}`);
+  if (notes) lines.push(`• Notes: ${notes}`);
+  return { text: lines.join('\n') };
+}
+
+tripForm.addEventListener('submit', e => {
+  e.preventDefault();
+  const req = buildRequest();
+  const errBox = $('formError');
+  if (req.error) { errBox.textContent = req.error; errBox.classList.remove('hidden'); return; }
+  errBox.classList.add('hidden');
+  tripForm.remove();
+  $('chatFooter').classList.remove('hidden');
+  send(req.text + '\n\nPlease go ahead with the full plan now; state any assumptions instead of asking.');
+});
+
+/* ---------- conversation ---------- */
 marked.setOptions({ breaks: true, gfm: true });
 const render = md => {
-  const html = DOMPurify.sanitize(marked.parse(md));
   const tmp = document.createElement('div');
-  tmp.innerHTML = html;
+  tmp.innerHTML = DOMPurify.sanitize(marked.parse(md));
   tmp.querySelectorAll('a').forEach(a => { a.target = '_blank'; a.rel = 'noopener noreferrer'; });
   return tmp.innerHTML;
 };
 const scrollDown = () => { scroller.scrollTop = scroller.scrollHeight; };
 
 function addUser(text) {
-  document.getElementById('welcome')?.remove();
   const el = document.createElement('div');
   el.className = 'msg user';
   const b = document.createElement('div'); b.className = 'bubble'; b.textContent = text;
@@ -153,7 +409,7 @@ function addUser(text) {
 function addAgent() {
   const el = document.createElement('div');
   el.className = 'msg agent';
-  el.innerHTML = '<div class="bubble" hidden></div><div class="status"><span class="dot"></span><span>Starting…</span></div>';
+  el.innerHTML = '<div class="bubble" hidden></div><div class="status"><span class="dot"></span><span>Starting… a full plan usually takes 1–3 minutes</span></div>';
   thread.appendChild(el); scrollDown();
   return {
     bubble: el.querySelector('.bubble'),
@@ -172,7 +428,8 @@ function showError(view, msg) {
 async function send(text) {
   if (busy || !text.trim()) return;
   busy = true; sendBtn.disabled = true;
-  addUser(text);
+  // Show the visitor their request without the instruction line we append.
+  addUser(text.replace(/\n\nPlease go ahead with the full plan now;.*$/s, ''));
   const view = addAgent();
   let md = '';
 
@@ -185,7 +442,7 @@ async function send(text) {
     if (!res.ok) {
       let detail = 'Request failed.';
       try { detail = (await res.json()).detail || detail; } catch {}
-      if (typeof detail !== 'string') detail = 'Please check your message and try again.';
+      if (typeof detail !== 'string') detail = 'Please check your request and try again.';
       showError(view, detail); return;
     }
 
@@ -220,25 +477,20 @@ async function send(text) {
   } catch (err) {
     showError(view, 'Could not reach the server. Check your connection and try again.');
   } finally {
-    busy = false; sendBtn.disabled = false; input.focus();
+    busy = false; sendBtn.disabled = false;
   }
 }
 
-form.addEventListener('submit', e => {
+chatForm.addEventListener('submit', e => {
   e.preventDefault();
   const text = input.value; input.value = ''; input.style.height = 'auto';
   send(text);
 });
 input.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); chatForm.requestSubmit(); }
 });
 input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = input.scrollHeight + 'px'; });
-document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => send(c.textContent)));
-document.getElementById('newTrip').addEventListener('click', () => {
-  if (busy) return;
-  sessionId = null;
-  location.reload();
-});
+$('newTrip').addEventListener('click', () => { if (!busy) location.reload(); });
 </script>
 </body>
 </html>
