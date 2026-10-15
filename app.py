@@ -10,6 +10,7 @@ Your ANTHROPIC_API_KEY stays on the server; visitors never see it.
 import json
 import os
 import time
+import unicodedata
 from collections import defaultdict, deque
 
 from anthropic import APIStatusError, AsyncAnthropic
@@ -102,7 +103,7 @@ async def _run_turn(message: str, session_id: str | None):
             session = await client.beta.sessions.create(
                 agent=AGENT_ID,
                 environment_id=ENVIRONMENT_ID,
-                title=message[:60],
+                title=_clean_title(message),
                 budget={
                     "type": "limit",
                     "max_list_cost": {"amount": str(round(SESSION_BUDGET_USD * 100)), "currency": "USD"},
@@ -170,6 +171,13 @@ async def _run_turn(message: str, session_id: str | None):
     except Exception as exc:  # surface a friendly message; details go to server logs
         print(f"[chat error] {type(exc).__name__}: {exc}", flush=True)
         yield _sse("error", {"message": f"Something went wrong talking to the agent ({type(exc).__name__}). Please try again."})
+
+
+def _clean_title(message: str) -> str:
+    """Session titles must not contain control/format characters (newlines, tabs, zero-width, etc.)."""
+    text = "".join(ch if unicodedata.category(ch)[0] != "C" else " " for ch in message)
+    text = " ".join(text.split())  # collapse runs of whitespace
+    return (text[:60].strip() or "Trip plan")
 
 
 def _describe_tool(name: str, tool_input: dict) -> str:
