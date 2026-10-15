@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Travel Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<style>
+  :root {
+    --bg: #f6f2ea; --surface: #fffdf8; --ink: #1f2a2e; --muted: #6b7478;
+    --line: #e4ddd0; --accent: #0f6b5c; --accent-ink: #ffffff; --user: #e8f1ee;
+    --warn-bg: #fdecea; --warn-ink: #8a2a1f;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12181a; --surface: #1a2225; --ink: #e8ecea; --muted: #9aa5a8;
+      --line: #2a3437; --accent: #3fb59d; --accent-ink: #0d1517; --user: #1f3330;
+      --warn-bg: #3a1f1c; --warn-ink: #f2b8ae;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg); color: var(--ink);
+    font: 16px/1.55 Inter, system-ui, sans-serif;
+    display: flex; flex-direction: column;
+  }
+  header {
+    padding: 14px 16px; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    background: var(--surface);
+  }
+  header h1 { font: 600 20px/1.2 Fraunces, Georgia, serif; margin: 0; letter-spacing: -0.01em; }
+  header p { margin: 2px 0 0; color: var(--muted); font-size: 13px; }
+  #newTrip {
+    border: 1px solid var(--line); background: transparent; color: var(--ink);
+    border-radius: 999px; padding: 7px 14px; font: inherit; font-size: 14px; cursor: pointer; white-space: nowrap; flex: none;
+  }
+  main { flex: 1; overflow-y: auto; }
+  .thread { max-width: 760px; margin: 0 auto; padding: 20px 16px 8px; }
+  .msg { margin: 0 0 18px; }
+  .msg.user .bubble {
+    background: var(--user); border-radius: 16px 16px 4px 16px;
+    padding: 10px 14px; margin-left: auto; max-width: 85%; width: fit-content; white-space: pre-wrap;
+  }
+  .msg.agent .bubble {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 16px 16px 16px 4px; padding: 6px 18px; overflow-x: auto;
+  }
+  .bubble h1, .bubble h2, .bubble h3 { font-family: Fraunces, Georgia, serif; font-weight: 600; line-height: 1.25; }
+  .bubble h1 { font-size: 22px; } .bubble h2 { font-size: 19px; } .bubble h3 { font-size: 17px; }
+  .bubble table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 10px 0; }
+  .bubble th, .bubble td { border: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; }
+  .bubble th { background: var(--bg); }
+  .bubble a { color: var(--accent); word-break: break-word; }
+  .status { color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 8px; padding: 10px 2px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: pulse 1.2s infinite; flex: none; }
+  @keyframes pulse { 50% { opacity: .25; } }
+  .error { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+  .welcome { text-align: center; padding: 8vh 8px 0; }
+  .welcome h2 { font: 600 28px/1.2 Fraunces, Georgia, serif; margin: 0 0 8px; }
+  .welcome p { color: var(--muted); margin: 0 0 22px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .chip {
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+    border-radius: 999px; padding: 8px 14px; font: inherit; font-size: 14px; cursor: pointer; text-align: left;
+  }
+  .chip:hover, #newTrip:hover { border-color: var(--accent); }
+  footer { border-top: 1px solid var(--line); background: var(--surface); padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
+  form { max-width: 760px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; }
+  textarea {
+    flex: 1; resize: none; border: 1px solid var(--line); border-radius: 14px;
+    padding: 11px 14px; font: inherit; background: var(--bg); color: var(--ink); max-height: 160px;
+  }
+  textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  button.send {
+    background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 14px;
+    padding: 11px 18px; font: inherit; font-weight: 600; cursor: pointer;
+  }
+  button.send:disabled { opacity: .5; cursor: default; }
+  .note { max-width: 760px; margin: 6px auto 0; color: var(--muted); font-size: 12px; text-align: center; }
+  #codeInput { display: none; max-width: 760px; margin: 0 auto 8px; }
+  #codeInput input { width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font: inherit; background: var(--bg); color: var(--ink); }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Travel Planner</h1>
+    <p>Routes, day-by-day plans, stays and budget in one go</p>
+  </div>
+  <button id="newTrip" type="button">New trip</button>
+</header>
+
+<main id="scroller">
+  <div class="thread" id="thread">
+    <div class="welcome" id="welcome">
+      <h2>Where are you headed?</h2>
+      <p>Tell me where from, where to, your dates and budget.</p>
+      <div class="chips">
+        <button class="chip" type="button">Hyderabad to Goa, Aug 28–Sep 2, ₹40k for 2</button>
+        <button class="chip" type="button">Delhi to Paris & Amsterdam, 8 days in May, €2,500 per person</button>
+        <button class="chip" type="button">Bengaluru to Coorg this weekend, relaxed pace, nature</button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div id="codeInput"><input id="code" type="password" placeholder="Access code" autocomplete="off"></div>
+  <form id="form">
+    <textarea id="input" rows="1" placeholder="From, to, dates, budget…" maxlength="2000"></textarea>
+    <button class="send" id="send" type="submit">Plan</button>
+  </form>
+  <p class="note">Prices and availability come from live web searches and can change before you book.</p>
+</footer>
+
+<script>
+const thread = document.getElementById('thread');
+const scroller = document.getElementById('scroller');
+const form = document.getElementById('form');
+const input = document.getElementById('input');
+const sendBtn = document.getElementById('send');
+const codeEl = document.getElementById('code');
+let sessionId = null;
+let busy = false;
+
+fetch('/api/config').then(r => r.json()).then(c => {
+  if (c.access_code_required) document.getElementById('codeInput').style.display = 'block';
+}).catch(() => {});
+
+marked.setOptions({ breaks: true, gfm: true });
+const render = md => {
+  const html = DOMPurify.sanitize(marked.parse(md));
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  tmp.querySelectorAll('a').forEach(a => { a.target = '_blank'; a.rel = 'noopener noreferrer'; });
+  return tmp.innerHTML;
+};
+const scrollDown = () => { scroller.scrollTop = scroller.scrollHeight; };
+
+function addUser(text) {
+  document.getElementById('welcome')?.remove();
+  const el = document.createElement('div');
+  el.className = 'msg user';
+  const b = document.createElement('div'); b.className = 'bubble'; b.textContent = text;
+  el.appendChild(b); thread.appendChild(el); scrollDown();
+}
+
+function addAgent() {
+  const el = document.createElement('div');
+  el.className = 'msg agent';
+  el.innerHTML = '<div class="bubble" hidden></div><div class="status"><span class="dot"></span><span>Starting…</span></div>';
+  thread.appendChild(el); scrollDown();
+  return {
+    bubble: el.querySelector('.bubble'),
+    status: el.querySelector('.status'),
+    statusText: el.querySelector('.status span:last-child'),
+    root: el,
+  };
+}
+
+function showError(view, msg) {
+  view.status.remove();
+  const e = document.createElement('div'); e.className = 'error'; e.textContent = msg;
+  view.root.appendChild(e); scrollDown();
+}
+
+async function send(text) {
+  if (busy || !text.trim()) return;
+  busy = true; sendBtn.disabled = true;
+  addUser(text);
+  const view = addAgent();
+  let md = '';
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: text, session_id: sessionId, access_code: codeEl.value || null }),
+    });
+    if (!res.ok) {
+      let detail = 'Request failed.';
+      try { detail = (await res.json()).detail || detail; } catch {}
+      if (typeof detail !== 'string') detail = 'Please check your message and try again.';
+      showError(view, detail); return;
+    }
+
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    let finished = false;
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let idx;
+      while ((idx = buf.indexOf('\n\n')) !== -1) {
+        const chunk = buf.slice(0, idx); buf = buf.slice(idx + 2);
+        const ev = (chunk.match(/^event: (.*)$/m) || [])[1];
+        const dataLine = (chunk.match(/^data: (.*)$/m) || [])[1];
+        if (!ev || !dataLine) continue;
+        const data = JSON.parse(dataLine);
+        if (ev === 'session') sessionId = data.session_id;
+        else if (ev === 'status') view.statusText.textContent = data.text;
+        else if (ev === 'text') {
+          md += (md ? '\n\n' : '') + data.text;
+          view.bubble.hidden = false;
+          view.bubble.innerHTML = render(md);
+          view.statusText.textContent = 'Working…';
+          scrollDown();
+        } else if (ev === 'error') { showError(view, data.message); finished = true; }
+        else if (ev === 'done') { view.status.remove(); finished = true; }
+      }
+    }
+    if (!finished) showError(view, 'The connection closed early. Please try again.');
+  } catch (err) {
+    showError(view, 'Could not reach the server. Check your connection and try again.');
+  } finally {
+    busy = false; sendBtn.disabled = false; input.focus();
+  }
+}
+
+form.addEventListener('submit', e => {
+  e.preventDefault();
+  const text = input.value; input.value = ''; input.style.height = 'auto';
+  send(text);
+});
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
+});
+input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = input.scrollHeight + 'px'; });
+document.querySelectorAll('.chip').forEach(c => c.addEventListener('click', () => send(c.textContent)));
+document.getElementById('newTrip').addEventListener('click', () => {
+  if (busy) return;
+  sessionId = null;
+  location.reload();
+});
+</script>
+</body>
+</html>
