@@ -22,7 +22,6 @@ from pydantic import BaseModel, Field
 # ---------------------------------------------------------------- config
 AGENT_ID = os.environ.get("AGENT_ID", "")
 ENVIRONMENT_ID = os.environ.get("ENVIRONMENT_ID", "")
-ACCESS_CODE = os.environ.get("ACCESS_CODE", "")  # optional: require a code to use the app
 MAX_MESSAGES_PER_HOUR = int(os.environ.get("MAX_MESSAGES_PER_HOUR", "5"))  # per visitor IP
 # Hard spend cap per conversation (USD). The session stops when it reaches this.
 SESSION_BUDGET_USD = float(os.environ.get("SESSION_BUDGET_USD", "3"))
@@ -62,7 +61,6 @@ def _sse(event: str, data: dict) -> str:
 class ChatIn(BaseModel):
     message: str = Field(min_length=1, max_length=MAX_MESSAGE_CHARS)
     session_id: str | None = None
-    access_code: str | None = None
 
 
 # ---------------------------------------------------------------- routes
@@ -73,7 +71,7 @@ async def index():
 
 @app.get("/api/config")
 async def config():
-    return {"access_code_required": bool(ACCESS_CODE)}
+    return {"access_code_required": False}
 
 
 @app.get("/healthz")
@@ -85,8 +83,6 @@ async def healthz():
 async def chat(body: ChatIn, request: Request):
     if not (AGENT_ID and ENVIRONMENT_ID):
         raise HTTPException(500, "Server is missing AGENT_ID or ENVIRONMENT_ID.")
-    if ACCESS_CODE and body.access_code != ACCESS_CODE:
-        raise HTTPException(401, "Wrong or missing access code.")
     if _rate_limited(_client_ip(request)):
         raise HTTPException(429, f"Limit of {MAX_MESSAGES_PER_HOUR} messages per hour reached. Try again later.")
 

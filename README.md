@@ -36,8 +36,6 @@ travel-agent-app/
    Render reads `render.yaml` and creates the web service.
 3. When asked, fill in the environment variables (your Agent and Environment IDs are already set in `render.yaml`):
    - `ANTHROPIC_API_KEY` — your key
-   - `ACCESS_CODE` — optional. Set it to share the app only with people who know the code;
-     leave empty for fully public.
 4. Deploy. Your app is live at `https://travel-planner-xxxx.onrender.com`.
    Open `/healthz` on that URL — `{"ok": true}` means the variables are set.
 
@@ -64,7 +62,6 @@ A public page means strangers spend your API credits. Built-in protections:
 
 - **Per-conversation spend cap** — `SESSION_BUDGET_USD` (default $3). Your test plan cost $1.26.
 - **Per-visitor limit** — `MAX_MESSAGES_PER_HOUR` (default 5) per IP address.
-- **Access code** — set `ACCESS_CODE` to require a code.
 - **Message length** capped at 2,000 characters; each turn times out after 10 minutes.
 - **Tools** — the agent can only search and read the web. If it ever asks permission for any
   other tool, the server denies it.

@@ -13,8 +13,6 @@ services:
         value: agent_01NjGHwuJrnXPVnz8NyXDQ7H
       - key: ENVIRONMENT_ID
         value: env_01JELFo54zPmUXZ5psheKCiw
-      - key: ACCESS_CODE
-        sync: false
       - key: MAX_MESSAGES_PER_HOUR
         value: "5"
       - key: SESSION_BUDGET_USD
